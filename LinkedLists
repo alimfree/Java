@@ -1,0 +1,66 @@
+public class NameList
+{  //initializing head to be empty.
+	private LinearNode<String> head = null;
+	private int count = 0; 
+    public NameList() {
+        // You write this constructor (if needed)
+    }
+    public void add(String name) {
+    	LinearNode<String> nameNode = new LinearNode<String>(name); //creating a new node pointing to the new name
+    	LinearNode<String> current = head; //setting my reference node to point to front of the list
+    	//if there are no items in list... add first item
+    	if (head == null){ 
+    		head = nameNode; 
+    		count++;
+    		toString();	
+    	}					
+    	//while name comes alphabetically before or equal to the next element in the list do this
+    	else if(name.compareTo(head.getElement()) <= 0) 
+    	{
+    		nameNode.setNext(head); 
+    		head = nameNode; 
+    		count++;	//incrementing size of list by one
+    	}
+    	else{ 
+    		//while name comes alphabetically after the  first element(s) in list but before some elements in the list do this
+    		while (current.getNext() != null && name.compareTo(current.getNext().getElement())> 0)
+    		{	
+    			current = current.getNext(); //looping through until desired node is found so we can insert new name next on the list	
+    		}
+    		nameNode.setNext(current.getNext()); //points new nameNode to the next item in the list which it is supposed to precede
+    		current.setNext(nameNode); //attaching the previous nodes to the new name node which now points to the rest of the list
+    		count++; //incrementing size of list by one
+    	}
+    }
+
+    public void delete(String name) {
+    	 LinearNode<String> current = head; 
+    	 LinearNode<String> previous = head;
+    	 //to delete first item in list do this.
+          if (current.getElement() == name){
+          		head = current.getNext();
+          		count--; //decrementing size of list by one
+          }
+          else{ // to delete an item in the middle or at the end of the list do this.
+        	  while (previous.getNext() != null && previous.getNext().getElement() != name){
+        		  previous = previous.getNext(); //finding the element just before the element to be deleted
+        	  }
+        	  if (previous.getNext() != null){
+        		  current = previous.getNext(); //pointing current reference to the item directly after item to be deleted
+           	   	  previous.setNext(current.getNext()); //pointing item before element to be deleted to the item directly after it. essentially skipping the deleted item
+           	   	  count--; //decrementing size of list by one
+        	  }  
+          }
+ }
+    public int size() {
+        return count;
+    }
+
+    public String toString() {
+       String list = ""; 
+       for (LinearNode<String> n=head; n!=null; n=n.getNext()) {
+       list = list + n.getElement() + " ";
+       }     
+       return list;
+       }
+ }
