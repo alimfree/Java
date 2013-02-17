@@ -1,0 +1,72 @@
+// Ali Spring 2013
+// Big O Example
+
+import java.util.Arrays;
+// What is the worst case Order of this program?
+// What is the best case Order?
+import java.util.Random;
+
+public class SelectionSort {
+    
+    // Set element 0 to the smallest, then
+    // Set element 1 to the next smallest, etc.
+    // In general, set element i to the smallest of array[i] ... array[last];
+    // the right of i including element i
+    public void bubbleSort(int[] array) {
+       	boolean swapped = true; 
+    		while(swapped){
+    			swapped = false;
+    			for (int i=0; i<array.length -1; ++i) {
+    				int next = i +1;
+    				if(array[i] > array[next]){
+    					int dummy = array[i];
+    					array[i] = array[next];
+    					array[next]= dummy;
+    					swapped = true;
+    				}
+    			} 			
+    		}       
+    }
+    
+    public void quicksort (int[] array){
+    	 
+    	 long before = System.nanoTime();
+    	Arrays.sort(array);
+    	long after = System.nanoTime();
+    	
+    	double time = after-before; 
+    	time = time/1000000000.0; 
+    	System.out.println(time);
+    	
+;    }
+    // print the array contents
+    public void printArray(int[] array) {
+        for (int i: array)
+            System.out.print(i + " ");
+        System.out.println();
+    }
+    
+    // Test the selectionSort() method
+    public static void main(String[] args) {
+        SelectionSort sorter = new SelectionSort();
+        	for (int size=1000; size<=50000; size += 1000) {
+        		int[] integers = new int[size];
+        		// Fill array with random integers;
+        		Random rand = new Random();
+            	for (int i=0; i<integers.length; ++i) {
+            		integers[i] = rand.nextInt(100);
+            		
+            	}
+            	long before = System.nanoTime();
+            	sorter.bubbleSort(integers); // perform the sort using bubble sort 
+            	long after = System.nanoTime();
+            	
+            	double time = after-before; 
+            	time = time/1000000000.0; 
+            	System.out.print(size + ",");
+            	System.out.print(time + ",");
+        		sorter.quicksort(integers);  // perform the sort using quick sort  
+        		
+        	 } 
+    }
+}
