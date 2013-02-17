@@ -1,0 +1,321 @@
+/*
+ * Mohamed Ali 
+ * Homework 3
+ */
+import java.awt.BorderLayout;
+import java.awt.GridLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
+import java.util.StringTokenizer; 
+
+
+public class Calculator implements ActionListener{
+  
+	
+	private ArrayStack <Double> value = new ArrayStack<Double>();		//initializing values stack integers  not sure how to make this generic type	
+	private ArrayStack <String>operator = new ArrayStack<String>(); 	//initializing operators stack of strings
+	
+	//static double op1,  op2; // dummy to store values 
+	private double result = 0;
+	//static String op0; //dummy to store operator
+	private String expr = "";
+	
+	//for GUI
+	//need to add a clear button
+	private JButton clear   = new JButton("Clear");
+	
+	private JTextField expression   = new JTextField("0");
+	private JButton plus   = new JButton("+");
+	private JButton minus   = new JButton("-");
+	private JButton multiply   = new JButton("*");
+	private JButton divide   = new JButton("/");
+	private JButton exponent   = new JButton("^");
+	private JButton equals   = new JButton("=");
+	private JButton decimal   = new JButton(".");
+	private JButton zero   = new JButton("0");
+	private JButton one   = new JButton("1");
+	private JButton two   = new JButton("2");
+	private JButton three   = new JButton("3");
+	private JButton four   = new JButton("4");
+	private JButton five   = new JButton("5");
+	private JButton six   = new JButton("6");
+	private JButton seven   = new JButton("7");
+	private JButton eight   = new JButton("8");
+	private JButton nine   = new JButton("9");
+
+	
+	public Calculator(){
+		JFrame frame = new JFrame("Infix Calculator");
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		JPanel operations = new JPanel();
+		JPanel buttonPanel = new JPanel();
+		JPanel buttonPanel2 = new JPanel();
+		operations.setLayout(new GridLayout(5,1));
+		buttonPanel.setLayout(new GridLayout(4,3)); 
+		buttonPanel2.setLayout(new GridLayout(1,5)); // the panel uses a GridLayout
+		
+		buttonPanel2.add(expression);
+		
+		
+        operations.add(plus);
+        operations.add(minus);
+        operations.add(multiply);
+        operations.add(divide);
+        operations.add(exponent);
+        
+        buttonPanel.add(one);
+        buttonPanel.add(two);
+        buttonPanel.add(three);
+        buttonPanel.add(four);
+        buttonPanel.add(five);
+        buttonPanel.add(six);
+        buttonPanel.add(seven);
+        buttonPanel.add(eight);
+        buttonPanel.add(nine);
+        buttonPanel.add(zero);
+        buttonPanel.add(decimal);
+        buttonPanel.add(equals);
+        
+      
+        
+        frame.setLayout(new BorderLayout()); // frame for zero and decimal
+        frame.add(buttonPanel2, BorderLayout.NORTH);
+        frame.add(buttonPanel, BorderLayout.CENTER);
+        frame.add(operations, BorderLayout.EAST);
+        frame.add(clear, BorderLayout.SOUTH);
+       
+        clear.addActionListener(this);
+        expression.addActionListener(this);
+        plus.addActionListener(this);
+        minus.addActionListener(this);
+        multiply.addActionListener(this);
+        divide.addActionListener(this);
+        exponent.addActionListener(this);
+        equals.addActionListener(this);
+        decimal.addActionListener(this);
+        zero.addActionListener(this);
+        one.addActionListener(this);
+        two.addActionListener(this);
+        three.addActionListener(this);
+        four.addActionListener(this);
+        five.addActionListener(this);
+        six.addActionListener(this);
+        seven.addActionListener(this);
+        eight.addActionListener(this);
+        nine.addActionListener(this);
+        
+        frame.pack();
+        frame.setLocation(20,50); // pixels, relative to upper left of screen
+        frame.setVisible(true);
+	}
+		
+	public boolean isOperator(String token){
+		if (token.equals("+") || token.equals("-")  || token.equals("*") || token.equals("/") || token.equals("^"))
+			return true;
+			else 
+				return false; 
+	}
+	
+	//Method to determine precedence, using order of operations
+	//currently taking in a token, but might be better to use only operators. how do I only refer to operators?
+	public int priority(String token){ //why do I need Object here? Is it necessary?
+		int precedence = 0; 
+		if (token.equals("(") || token.equals(")"))
+			precedence = 0; 
+		else if (token.equals("^"))
+			precedence = 4; 
+		else if (token.equals("*") || token.equals("/"))
+			precedence =3; 
+		else if (token.equals("+") || token.equals("-"))
+			precedence =2; 
+		else
+			precedence = 1;
+		 // numbers have lowest precedence
+	
+		return precedence; 
+	}
+		//need to continue using generic type when using ArrayStacks but not sure how to do this
+	public double algorithm(String expr){
+		String token;
+		expr = "(" + expr + ")"; //adding parenthesis to expression
+		
+		expr = expr.replace(" ", ""); // replacing all spaces in the expression
+		StringTokenizer tokenizer = new StringTokenizer(expr, "()*/+-^", true); //converting expression into tokens	
+		
+		while (tokenizer.hasMoreTokens()){
+			token = tokenizer.nextToken();
+			if (token.equals("("))  {
+				operator.push(token);
+			}
+			double num = 0;
+			if (!isOperator(token) && !token.equals("(") && !token.equals(")") ) //if token is not an operator but instead a number do this
+			{
+				num = Double.parseDouble(token); //taking the string number and converting it to a double 
+				value.push(num); // adding number to value stack
+				
+
+			}
+			if (token.equals(")")){
+				//if thing on top of operator stack is not a left parenthesis do this
+				while (operator.peek().equals("(") == false){
+					String op0 = (String) operator.peek();//storing operator before popping it 
+					operator.pop(); 
+					Double op1 = (double) value.peek(); //storing value before popping
+					value.pop();
+					Double op2 = (double) value.peek(); //storing value before popping
+					value.pop();
+					evaluate(op0, op1, op2);
+					value.push(result);	
+				}
+				operator.pop(); //discarding left parenthesis			
+			}
+			if (isOperator(token))	//if token is an operator do this
+			{
+				//while the operator stack is not empty and the thing on top of 
+				//operator stack has the same or greater precedence as teh token do this
+				while (operator.isEmpty()==false && priority(operator.peek()) >= priority(token)){
+					String op0 = operator.peek(); //storing operator on top of stack
+					operator.pop();
+					double op1 = value.pop(); //storing value before poping
+					double op2 =  value.pop(); //storing value before poping
+					evaluate(op0, op1, op2);
+					value.push(result);
+				}
+				operator.push(token); //discarding left parenthesis
+			}
+			
+		}
+		result = (double) value.peek(); // after algorithm runs value stack should have one value and operator stack should be empty.
+		return result;
+	}
+	
+	//want to pass operator and values from previous method to return result 
+	//of an evaluation of the expression
+	public double evaluate(String op0, double op1, double op2) {
+		
+		if (op0.equals("^")){
+			 result = Math.pow(op2,op1); //op2^op1 order important first in first out
+		}
+		if (op0.equals("+")){
+			result = op1+op2; //order not important
+		}
+		if (op0.equals("-")){
+			result = op2-op1; // order important 
+		}
+		if (op0.equals("*")){
+			result= op1*op2; //order not important
+		}
+		if (op0.equals("/")){
+			result= op2/op1; //order important
+		}
+		return result; 
+	}
+
+	
+	@Override
+	public void actionPerformed(ActionEvent event) {
+		//expr = expression.getText(); 					//if enter is pressed we take expression from jtextfield
+		//result = algorithm(expr);						//then pass expr to our algorithm
+		//String result2 = Double.toString(result); //converting result which is double into a string to be displayed in expression field
+		//expression.setText(result2);
+		//expression.setText(result); //temporary 
+		
+		String buttonString = ((JButton)(event.getSource())).getText();
+		char buttonChar = buttonString.charAt(0);
+		if (buttonChar >= '0' && buttonChar <= '9'){
+			expr += buttonChar;
+			expression.setText(expr);
+		}	
+		 /*
+		 if (event.getSource() == one){
+			 expr = expr + "1";
+			 expression.setText(expr); 
+		 }
+		 if (event.getSource() == two){
+			 expr = expr + "2";
+			 expression.setText(expr); 
+		 }
+		 if (event.getSource() == three){
+			 expr = expr + "3";
+			 expression.setText(expr); 
+		 }
+		 if (event.getSource() == four){
+			 expr = expr + "4";
+			 expression.setText(expr); 
+		 }
+		 if (event.getSource() == five){
+			 expr = expr + "5";
+			 expression.setText(expr); 
+		 }
+		 if (event.getSource() == six){
+			 expr = expr + "6";
+			 expression.setText(expr); 
+		 }
+		 if (event.getSource() == seven){
+			 expr = expr + "7";
+			 expression.setText(expr); 
+		 }
+		 if (event.getSource() == eight){
+			 expr = expr + "8";
+			 expression.setText(expr); 
+		 }
+		 if (event.getSource() == nine){
+			 expr = expr + "9";
+			 expression.setText(expr); 
+		 }
+		 if (event.getSource() == zero){
+			 expr = expr + "0";
+			 expression.setText(expr); 
+		 }
+		 */
+		
+		 if (event.getSource() == decimal){
+			 expr = expr + ".";
+			 expression.setText(expr); 
+		 }
+		 
+		 if (event.getSource() == plus){
+			 expr = expr + "+";
+			 expression.setText(expr); 
+		 }
+		 if (event.getSource() == minus){
+			 expr = expr + "-";
+			 expression.setText(expr); 
+		 }
+		 if (event.getSource() == multiply){
+			 expr = expr + "*";
+			 expression.setText(expr); 
+		 }
+		 if (event.getSource() == divide){
+			 expr = expr + "/";
+			 expression.setText(expr); 
+		 }
+		 if (event.getSource() == exponent){
+			 expr = expr + "^";
+			 expression.setText(expr); 
+		 }
+		 //not ready yet 
+		 if (event.getSource() == equals || event.getSource() == expression){
+			 expr = expression.getText(); 					//if enter is pressed we take expression from jtextfield
+				result = algorithm(expr);						//then pass expr to our algorithm
+				String result2 = Double.toString(result); //converting result which is double into a string to be displayed in expression field
+				expression.setText(result2);
+		 }
+		 if(event.getSource() == clear){
+			 expr = "";
+			 expression.setText(expr);
+		 }
+	}
+	
+	
+	public static void main(String[] args) {
+		Calculator test = new Calculator();
+		
+
+	}
+
+}
