@@ -1,55 +1,195 @@
-// William Ames, Spring 2013
 
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Graphics;
-import javax.swing.JComponent;
 
-public class MazeViewer extends JComponent {
+import java.awt.BorderLayout;
+import java.util.LinkedList;
 
-  private static final long serialVersionUID = 1L;
-	private  final MazeSolver parent;
-	
-	public MazeViewer(MazeSolver parent) {
-		this.parent = parent;
-		setPreferredSize(new Dimension(500,500));
+import javax.swing.JFrame;
+public class MazeSolver{
+	private MazeViewer mazeViewer = new MazeViewer(this);
+	public MazeSolver(){
+		JFrame frame = new JFrame("Maze Solver");
+	     frame.setLayout(new BorderLayout());
+	     frame.add(mazeViewer, BorderLayout.CENTER);
+	     frame.pack();
+	     frame.setVisible(true);
+	     frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+	}
+	 //Nested class Location to specify type of LinkedList
+	public class Location
+	{
+		//i and j are the row and columns respectively that make up this Location.
+		private int i; //row
+		private int j; //column
+
+		//Constructor method
+		public Location(int newi, int newj)
+		{
+			i = newi;
+			j = newj;
+		}
+		//Row getter method
+		public int getRow(){
+			return i; 
+		}
+		//Column getter method
+		public int getColumn(){
+			return j; 
+		}	
+		public boolean isActive =false; 
 	}
 
-    @Override
-    public void paintComponent(Graphics graphics) {
-    	int[][] maze = parent.getMaze();
-    	int cellSize = Math.min(getWidth()/maze[0].length, getHeight()/maze.length);
-    	graphics.setColor(Color.GRAY);
-    	graphics.fillRect(0, 0, getWidth(), getHeight());
-    	
-        for (int row = 0; row < maze.length; row++)
-            for (int col = 0; col < maze[0].length; col++)
-                drawCell(graphics, maze[row][col], row, col, cellSize);
+	public static final int mazeLength = 20;
+	public static final int mazeWidth = 20; 
+	LinkedList<Location> queue = new LinkedList<Location>(); 
+	Location [][] predecessor = new Location[mazeLength][mazeWidth];
+
+	public static final int WALL = 1, OPEN = 0, GOAL = 2, START = 3;
+	public static final int ACTIVE = 4, SOLUTION = 5;
+	public static int[][] maze = {
+		{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+        {1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1},
+        {1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1},
+        {1, 0, 1, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1},
+        {1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1},
+        {1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1},
+        {1, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 1, 1},
+        {1, 0, 0, 0, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1},
+        {1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1},
+        {1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1},
+        {1, 1, 1, 0, 0, 1, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1},
+        {1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1},
+        {1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1},
+        {1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 0, 0, 0, 0, 1},
+        {1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1},
+        {1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+        {1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 1},
+        {1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1},
+        {1, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+        {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+	};
+
+
+
+	//method to find start position of the two dimensional array maze and add it's index to the queue
+	public void findStart (int [][]maze){
+
+		for (int i=0; i<maze[0].length; ++i){
+			for(int j=0; j<maze.length; j++){
+				//add the index of the START location to the queue
+				if (maze[i][j] == START){
+					Location start = new Location(i, j);
+					queue.add(start);
+				}
+			}
+		}
+	}
+	
+	//Method to find index of Goal
+    public Location findGoal() {
+    		for (int row = 0; row < maze[0].length; row++) {
+    			for (int col = 0; col < maze.length; col++) {
+    				if (maze[row][col] == GOAL) {
+    					Location goal = new Location(row, col);
+    					return goal;
+    				}
+    			}
+    		}	
+    		return null;
     }
     
-    private void drawCell(Graphics graphics, int mazeCellValue, int row, int col, int cellSize) {
-        switch (mazeCellValue) {
-        case MazeSolver.WALL:
-            graphics.setColor(Color.BLACK);
-            break;
-        case MazeSolver.OPEN:
-            graphics.setColor(Color.WHITE);
-            break;
-        case MazeSolver.GOAL:
-            graphics.setColor(Color.RED);
-            break;
-        case MazeSolver.START:
-            graphics.setColor(Color.GREEN);
-            break;
-        case MazeSolver.ACTIVE:
-            graphics.setColor(Color.CYAN);
-            break;
-        case MazeSolver.SOLUTION:
-            graphics.setColor(Color.GREEN);
-            break;
-        }
-        graphics.fillRect(col * cellSize, row * cellSize, cellSize, cellSize);
-        graphics.setColor(Color.GRAY); // border
-        graphics.drawRect(col * cellSize, row * cellSize, cellSize, cellSize);
-    }
+	//Adding the index of neighbors of current location which are either OPEN or GOAL into the queue
+	public void findNeighbors(Location current){
+		int row = current.getRow();
+		int col = current.getColumn(); 
+		
+		//look down
+		if (maze[row + 1][col]== OPEN || maze[row + 1][col]== GOAL){
+			Location next = new Location(row +1, col);
+			queue.add(next);
+			predecessor[row+1][col] = current;
+		}
+		
+		//look up
+		if (maze[row - 1][col]== OPEN || maze[row - 1][col]== GOAL){
+			Location next = new Location(row -1, col);
+			queue.add(next);
+			predecessor[row-1][col] = current;
+		}
+		
+		//look left
+		if (maze[row][col -1]== OPEN || maze[row][col -1]== GOAL){
+			Location next = new Location(row, col -1);
+			queue.add(next);
+			predecessor[row][col-1] = current;
+		}
+		
+		//look right
+		if (maze[row][col +1]== OPEN || maze[row][col +1]== GOAL){
+			Location next = new Location(row, col +1);
+			queue.add(next);
+			predecessor[row][col+1] = current;
+		}
+		
+	}
+	
+	public int[][] getMaze(){
+		return maze;
+	}
+	
+	//While the queue is not empty do this
+	public void algorithm() throws InterruptedException{
+		while(!queue.isEmpty()){
+			Location result = queue.remove();
+			int row = result.getRow();
+			int col = result.getColumn();
+			if (maze[row][col] == GOAL)
+				break; //exit loop
+			else if(maze[row][col] == WALL || maze[row][col] == ACTIVE){
+				//return to the top of while loop
+			}
+			else{
+				maze[row][col] = ACTIVE; //setting the location to active
+				Thread.sleep(100);
+				mazeViewer.repaint();
+				//Finding and adding neighbors to predecessor array
+				findNeighbors(result);
+			}
+		}
+	}
+	
+	//Tracing back through queue to find and highlight the best solution 
+	public void findSolution () throws InterruptedException{
+		if (queue.isEmpty())
+			System.out.println("Unsolvable"); 
+		
+		//trace back through the predecessor links to the starting location
+		//mark each cell as part of the solution
+		else {
+			//starting at the goal location index
+			Location goal = findGoal();
+			//grabbing row and column index of that location within the maze
+			int row = goal.getRow();
+			int col = goal.getColumn();
+			//setting previous equal to the location of the goal within the maze
+			Location previous = new Location(row, col);
+				while (predecessor[row][col] != null) {
+					//setting previous equal to the location within the predecessor array
+					previous = predecessor[row][col];
+					//grabbing the row and column value of that location
+					row = previous.getRow();
+					col = previous.getColumn();
+					//setting the previous location equal to SOLUTION in the maze array
+					maze[row][col] = SOLUTION;
+					Thread.sleep(100);
+					mazeViewer.repaint();
+				}
+			}
+		}
+	
+	public static void main(String[] args) throws InterruptedException {
+		MazeSolver test = new MazeSolver();
+		test.findStart(maze);
+		test.algorithm();
+		test.findSolution();
+	}
 }
